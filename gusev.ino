@@ -45,8 +45,7 @@ void setup()
   digitalWrite(IN1, LOW);digitalWrite(IN2, LOW);digitalWrite(IN3, LOW);digitalWrite(IN4, LOW);
   s.write(90);
   delay(100);
-  Serial.println("Robô inicializado - Alexander Sergei Gusev 01");
-  Serial.println("FORA TEMER");
+  Serial.println("Robô inicializado - Alexander Slavoj Gusev");
   //delay 500 = virada em 45 graus
   // servo 0 graus -> direita
   // servo 90 graus -> frente
