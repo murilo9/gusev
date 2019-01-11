@@ -3,22 +3,22 @@
 #include 
 #define SERVO 6 // Porta Digital 6 PWM
 
-//Define os pinos dos motores
+//Define os pinos dos motores:
 int IN1 = 2;
 int IN2 = 3;
 int IN3 = 4;
 int IN4 = 5;
 
-const int echoPin=8;
-const int trigPin=7;
-//roxo, azul
+//Define os pinos do sensor de ulstrassom:
+const int echoPin=8;  //cabo roxo
+const int trigPin=7;  //cabo azul
 
 unsigned long int distancia;
 Servo s; // Variável Servo
 int pos; // Posição Servo
 int lastTime=0;
 int periodo=0;
-int detectedGraus_dist[18];
+int detectedGraus_dist[18];   //Array que armazena a distância de cada posição do sensor
 int i;
 
 void setup()
@@ -29,73 +29,61 @@ void setup()
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
  
-  
+  //Define os pinos do sensor como entrada e saída
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  s.attach(SERVO);
-  s.write(90); // Inicia motor posição 90
-  int pos=0;
+  s.attach(SERVO);    //Define o pino do servomotor
+  s.write(90); //Inicia sensor na posição 90º (pra frente)
+  int pos=0;  //Variável do contador do sensor
 
   //Inicializa a serial
   Serial.begin(9600);
 
   //Teste de motores
   digitalWrite(IN1, HIGH);digitalWrite(IN2, LOW);digitalWrite(IN3, LOW);digitalWrite(IN4, HIGH);  //Gira pra esquerda
-  delay(300);
-  digitalWrite(IN1, LOW);digitalWrite(IN2, LOW);digitalWrite(IN3, LOW);digitalWrite(IN4, LOW);
-  s.write(90);
+  delay(300);   //Espera 0.3 s
+  digitalWrite(IN1, LOW);digitalWrite(IN2, LOW);digitalWrite(IN3, LOW);digitalWrite(IN4, LOW);    //Pára
+  s.write(90);   //Coloca o sensor na posição 90º (pra frente) 
   delay(100);
   Serial.println("Robô inicializado - Alexander Sergei Gusev 01");
-  Serial.println("FORA TEMER");
-  //delay 500 = virada em 45 graus
-  // servo 0 graus -> direita
-  // servo 90 graus -> frente
-  // servo 180 graus -> esquerda
 }
 
 void loop()
 {
-            /*delay(100);
-            digitalWrite(trigPin, HIGH);
-            delayMicroseconds(11);
-            digitalWrite(trigPin, LOW);
-            distancia=pulseIn(echoPin, HIGH)/100*2;
-            Serial.print("Atualmente em: ");Serial.print(pos);Serial.print(" graus");
-            Serial.print("Distancia: ");Serial.print(distancia);Serial.println(" cm");*/
         Serial.println("Fazendo varredura");
         s.write(0);delay(20);    //Coloca o leitor da posição 0
         pos=0;
-        while(pos<=180)    //Faz varredura com servo e guarda as distancias no array detectedGraus_dist[]
+        while(pos<=180)    //Faz varredura com o servo e guarda as distancias no array detectedGraus_dist[]
         {
-            s.write(pos);delay(100);
-            digitalWrite(trigPin, HIGH);
-            delayMicroseconds(11);
-            digitalWrite(trigPin, LOW);
-            distancia=pulseIn(echoPin, HIGH)/100*2;
-            if(distancia>=4 && distancia <=200)
+            s.write(pos);delay(100);    //Coloca o servo na posição atual
+            digitalWrite(trigPin, HIGH);    //Ativa a leitura do sensor
+            delayMicroseconds(11);    //Aguarda o sensor calcular a distância
+            digitalWrite(trigPin, LOW);   //Desativa a leitura do sensor
+            distancia=pulseIn(echoPin, HIGH)/200;   //Distância(cm) = tempo do ciclo / 200
+            if(distancia>=4 && distancia <=200)   //Se a distância calculada pelo sensor estiver entre 4cm e 200cm
               detectedGraus_dist[pos/10]=distancia;   //Guarda o valor da distância detectada na posição em graus lida
-            else
-              detectedGraus_dist[pos/10]=200;       //Se nada for detectado nesta posição em graus, guarda o valor 0
+            else    //Caso contrário
+              detectedGraus_dist[pos/10]=200;       //Descarta o valor calculado (0)
             delay(20);
-            pos+=10;
+            pos+=10;    //Avança o sensor para a próxima posição (+10º)
         }
-        s.write(90);delay(200);   //Após a varredura, deixa o leitor virado pra frente
+        //Após a varredura de todas as posições, deixa o servo virado pra frente:
+        s.write(90);delay(200);   
         Serial.println("Resultado da varredura:");
         i=0;
-        while(i<=18)
+        while(i<=18)    //Analisa cada uma das 18 direções varridas (0º a 180º)
         {
-          //Escreve as distâncias em cada posição em graus na porta serial
+          //Escreve as distâncias em cada direção na porta serial
           Serial.print(i*10);Serial.print(" graus: objeto a ");Serial.print(detectedGraus_dist[i]);Serial.println(" cm");
-          //Transmite a distância desta posição
           i+=1;
         }
-        //Efetuando próximo movimento
+        //Decidindo em que direção o robô deverá se mover
         //Se não houver nada a menos de 40 cm da frente
         if((detectedGraus_dist[5])>40&&(detectedGraus_dist[6])>40&&(detectedGraus_dist[7])>40&&(detectedGraus_dist[8])>40&&(detectedGraus_dist[9])>40&&
         (detectedGraus_dist[10])>40&&(detectedGraus_dist[11])>40&&(detectedGraus_dist[12])>40&&(detectedGraus_dist[13])>40) 
         {
           Serial.println("Avançando");
-          digitalWrite(IN1, LOW);digitalWrite(IN2, HIGH);digitalWrite(IN3, LOW);digitalWrite(IN4, HIGH);delay(500);   //Avança
+          digitalWrite(IN1, LOW);digitalWrite(IN2, HIGH);digitalWrite(IN3, LOW);digitalWrite(IN4, HIGH);delay(500);   //Avança pra frente
           digitalWrite(IN1, LOW);digitalWrite(IN2, LOW);digitalWrite(IN3, LOW);digitalWrite(IN4, LOW);delay(100);          
         }
         //Caso contrário, verifica se não há nenhum objeto a menos de 40 cm da esquerda
@@ -126,4 +114,3 @@ void loop()
           digitalWrite(IN1, LOW);digitalWrite(IN2, LOW);digitalWrite(IN3, LOW);digitalWrite(IN4, LOW);delay(100);
         }
 }
-
